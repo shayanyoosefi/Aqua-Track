@@ -81,6 +81,7 @@ export default function Layout({ children }) {
       return [
         { title: "My Pool", url: createPageUrl("ClientPool"), icon: Home },
         { title: "Request Service", url: createPageUrl("RequestService"), icon: ClipboardList },
+        { title: "Request Construction", url: createPageUrl("RequestConstruction"), icon: Package },
         { title: "Service History", url: createPageUrl("ServiceHistory"), icon: History },
         { title: "Rate Technician", url: createPageUrl("TechnicianFeedback"), icon: MessageSquare }
       ];
@@ -107,107 +108,130 @@ export default function Layout({ children }) {
         }
       `}</style>
 
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-cyan-100 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                <Waves className="w-6 h-6 text-white" />
+      <header className="sticky top-0 z-50 border-b border-cyan-100/70 bg-white/85 backdrop-blur">
+        <div className="relative mx-auto grid w-full max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-3 justify-self-start">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-sm shadow-cyan-500/30">
+              <Waves className="h-6 w-6" />
+            </div>
+            <div className="leading-tight">
+              <div className="text-slate-900">
+                <p className="text-lg font-semibold leading-5">Absolute</p>
+                <p className="text-lg font-semibold leading-5">Pools</p>
               </div>
-              <div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
-                  Absolute Pools
-                </h1>
-                <p className="text-xs text-gray-500">Service Platform</p>
+              <p className="text-xs uppercase tracking-[0.35em] text-cyan-600">Service Platform</p>
+            </div>
+          </div>
+
+          <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center justify-center gap-1.5 rounded-full border border-cyan-100/70 bg-white px-1.5 py-1 shadow-sm shadow-cyan-100/40 md:flex">
+            {navigationItems.map((item) => {
+              const isActive = location.pathname === item.url;
+              return (
+                <Link
+                  key={item.title}
+                  to={item.url}
+                  className={`group flex h-11 items-center gap-2 rounded-full px-3 text-sm font-medium transition-all ${
+                    isActive
+                      ? 'border border-cyan-200 bg-cyan-50 text-cyan-700 shadow-sm shadow-cyan-100'
+                      : 'border border-transparent text-slate-600 hover:bg-slate-50 hover:text-cyan-700 hover:border-cyan-200'
+                  }`}
+                >
+                  <item.icon className="h-4 w-4 shrink-0 text-current" />
+                  <span className="whitespace-nowrap leading-5">
+                    {item.title}
+                  </span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          <div className="flex items-center gap-3 justify-self-end">
+            <div className="hidden items-center gap-3 rounded-2xl border border-cyan-100/80 bg-cyan-50/60 px-3 py-2 transition-all md:flex">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 text-white text-sm font-semibold">
+                {user?.full_name?.charAt(0) || 'U'}
+              </div>
+              <div className="leading-tight">
+                <p className="text-sm font-semibold text-slate-900">{user?.full_name}</p>
+                <p className="text-xs uppercase tracking-[0.3em] text-cyan-600">{user?.role}</p>
               </div>
             </div>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-2">
+            {user?.role === 'pool_owner' && (
+              <Link
+                to="/login"
+                className="hidden items-center gap-2 rounded-md border border-cyan-200 px-3 py-2 text-sm font-medium text-cyan-700 hover:bg-cyan-50 md:flex"
+              >
+                Login
+              </Link>
+            )}
+
+            <Button
+              variant="outline"
+              onClick={handleLogout}
+              className="hidden items-center gap-2 border-red-200 text-red-600 hover:bg-red-50 md:flex"
+            >
+              <LogOut className="h-5 w-5" />
+              <span>Logout</span>
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMobileMenuOpen((open) => !open)}
+              className="md:hidden"
+            >
+              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </Button>
+          </div>
+        </div>
+
+        {mobileMenuOpen && (
+          <div className="border-t border-cyan-100/60 bg-white/95 shadow-lg shadow-cyan-100/50 md:hidden">
+            <nav className="flex flex-col divide-y divide-cyan-100/70">
               {navigationItems.map((item) => (
                 <Link
                   key={item.title}
                   to={item.url}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center gap-3 px-5 py-4 text-sm font-medium transition-colors ${
                     location.pathname === item.url
-                      ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/30'
-                      : 'text-gray-700 hover:bg-cyan-50'
+                      ? 'bg-cyan-50 text-cyan-700'
+                      : 'text-slate-600 hover:bg-cyan-50 hover:text-cyan-600'
                   }`}
                 >
-                  <item.icon className="w-4 h-4" />
-                  <span className="font-medium">{item.title}</span>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-50 text-cyan-600">
+                    <item.icon className="h-4 w-4" />
+                  </span>
+                  {item.title}
                 </Link>
               ))}
-            </nav>
-
-            <div className="flex items-center gap-3">
-              <div className="hidden md:flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-cyan-50 to-blue-50 rounded-lg border border-cyan-100">
-                <div className="w-8 h-8 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full flex items-center justify-center">
-                  <span className="text-white font-semibold text-sm">
-                    {user?.full_name?.charAt(0) || 'U'}
-                  </span>
-                </div>
-                <div className="text-sm">
-                  <p className="font-medium text-gray-900">{user?.full_name}</p>
-                  <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleLogout}
-                className="hidden md:flex text-gray-500 hover:text-red-600"
-              >
-                <LogOut className="w-5 h-5" />
-              </Button>
-
-              {/* Mobile Menu Button */}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden"
-              >
-                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-              </Button>
-            </div>
-          </div>
-
-          {/* Mobile Navigation */}
-          {mobileMenuOpen && (
-            <div className="md:hidden py-4 border-t border-cyan-100">
-              <nav className="flex flex-col gap-2">
-                {navigationItems.map((item) => (
-                  <Link
-                    key={item.title}
-                    to={item.url}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-                      location.pathname === item.url
-                        ? 'bg-cyan-500 text-white'
-                        : 'text-gray-700 hover:bg-cyan-50'
-                    }`}
-                  >
-                    <item.icon className="w-5 h-5" />
-                    <span className="font-medium">{item.title}</span>
-                  </Link>
-                ))}
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-all"
+              {user?.role === 'pool_owner' && (
+                <Link
+                  to="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-5 py-4 text-sm font-medium text-cyan-700 hover:bg-cyan-50"
                 >
-                  <LogOut className="w-5 h-5" />
-                  <span className="font-medium">Logout</span>
-                </button>
-              </nav>
-            </div>
-          )}
-        </div>
+                  Login
+                </Link>
+              )}
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  handleLogout();
+                }}
+                className="flex items-center gap-3 px-5 py-4 text-sm font-medium text-red-600 hover:bg-red-50"
+              >
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-50 text-red-600">
+                  <LogOut className="h-4 w-4" />
+                </span>
+                Logout
+              </button>
+            </nav>
+          </div>
+        )}
       </header>
 
-      {/* Main Content */}
-      <main className="min-h-[calc(100vh-4rem)]">
+      <main className="min-h-[calc(100vh-5rem)]">
         {children}
       </main>
     </div>

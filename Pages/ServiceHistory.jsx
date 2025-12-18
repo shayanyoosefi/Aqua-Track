@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { History, Calendar, User as UserIcon, FileText } from "lucide-react";
 import { format } from "date-fns";
+import PageHeader from "../Components/common/PageHeader";
 
 export default function ServiceHistory() {
   const [user, setUser] = useState(null);
@@ -61,12 +62,10 @@ export default function ServiceHistory() {
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent mb-2">
-          Service History
-        </h1>
-        <p className="text-gray-600">All service requests and reports for your pool</p>
-      </div>
+      <PageHeader
+        title="Service History"
+        subtitle="All service requests and reports for your pool"
+      />
 
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Service Requests */}

@@ -3,6 +3,7 @@ import { ServiceRequest, Pool, User } from "@/entities/all";
 import { Button } from "@/components/ui/button";
 import { Plus, Filter } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import PageHeader from "../Components/common/PageHeader";
 
 import ServiceRequestsList from "../components/requests/ServiceRequestsList";
 import CreateServiceModal from "../components/requests/CreateServiceModal";
@@ -10,6 +11,7 @@ import CreateServiceModal from "../components/requests/CreateServiceModal";
 export default function ServiceRequests() {
   const [requests, setRequests] = useState([]);
   const [pools, setPools] = useState([]);
+  const [technicians, setTechnicians] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [filterStatus, setFilterStatus] = useState('all');
@@ -19,12 +21,14 @@ export default function ServiceRequests() {
   }, []);
 
   const loadData = async () => {
-    const [requestsData, poolsData] = await Promise.all([
+    const [requestsData, poolsData, users] = await Promise.all([
       ServiceRequest.list('-created_date'),
-      Pool.list()
+      Pool.list(),
+      User.list()
     ]);
     setRequests(requestsData);
     setPools(poolsData);
+    setTechnicians(users.filter(u => u.role === 'technician' || u.email?.includes('tech')));
     setLoading(false);
   };
 
@@ -34,21 +38,19 @@ export default function ServiceRequests() {
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
-            Service Requests
-          </h1>
-          <p className="text-gray-600 mt-1">Manage all pool service requests</p>
-        </div>
-        <Button
-          onClick={() => setShowCreateModal(true)}
-          className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          New Request
-        </Button>
-      </div>
+      <PageHeader
+        title="Service Requests"
+        subtitle="Manage all pool service requests"
+        actions={(
+          <Button
+            onClick={() => setShowCreateModal(true)}
+            className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            New Request
+          </Button>
+        )}
+      />
 
       <div className="mb-6">
         <Tabs value={filterStatus} onValueChange={setFilterStatus}>
@@ -65,6 +67,7 @@ export default function ServiceRequests() {
       <ServiceRequestsList 
         requests={filteredRequests}
         pools={pools}
+        technicians={technicians}
         loading={loading}
         onUpdate={loadData}
       />

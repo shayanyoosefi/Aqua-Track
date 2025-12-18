@@ -11,7 +11,7 @@ import { createPageUrl } from "@/utils";
 export default function TechnicianFeedbackPage() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
-  const [completedServices, setCompletedServices] = useState([]);
+  const [rateableServices, setRateableServices] = useState([]);
   const [selectedService, setSelectedService] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -35,13 +35,18 @@ export default function TechnicianFeedbackPage() {
       const currentUser = await User.me();
       setUser(currentUser);
 
-      const requests = await ServiceRequest.list('-completion_date', 50);
-      const userCompleted = requests.filter(
-        r => r.client_email === currentUser.email && 
-        r.status === 'completed' && 
-        r.assigned_technician
+      const [requests, existingFeedbacks] = await Promise.all([
+        ServiceRequest.list('-completion_date', 100),
+        TechnicianFeedback.list()
+      ]);
+      const alreadyRatedIds = new Set(existingFeedbacks.map(f => f.service_request_id));
+      const userRateable = requests.filter(r =>
+        r.client_email === currentUser.email &&
+        ['completed','in_progress','assigned'].includes(r.status) &&
+        r.assigned_technician &&
+        !alreadyRatedIds.has(r.id)
       );
-      setCompletedServices(userCompleted);
+      setRateableServices(userRateable);
     } catch (error) {
       console.error("Error loading data:", error);
     }
@@ -112,14 +117,14 @@ export default function TechnicianFeedbackPage() {
     );
   }
 
-  if (completedServices.length === 0) {
+  if (rateableServices.length === 0) {
     return (
       <div className="p-4 md:p-8 max-w-4xl mx-auto">
         <Card className="p-12 text-center border-none shadow-lg">
           <MessageSquare className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">No Completed Services</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">No Services to Rate</h2>
           <p className="text-gray-600">
-            You don't have any completed services to review yet.
+            We couldn’t find any assigned/in‑progress/completed services without feedback.
           </p>
         </Card>
       </div>
@@ -143,7 +148,7 @@ export default function TechnicianFeedbackPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {completedServices.map((service) => (
+              {rateableServices.map((service) => (
                 <button
                   key={service.id}
                   onClick={() => setSelectedService(service)}
@@ -159,9 +164,11 @@ export default function TechnicianFeedbackPage() {
                   <p className="text-xs text-gray-500 mt-1">
                     {service.assigned_technician}
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {new Date(service.completion_date).toLocaleDateString()}
-                  </p>
+                  {service.completion_date && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      {new Date(service.completion_date).toLocaleDateString()}
+                    </p>
+                  )}
                 </button>
               ))}
             </div>
@@ -181,6 +188,26 @@ export default function TechnicianFeedbackPage() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Selected Technician & Service Info */}
+                <div className="rounded-xl border border-gray-100 bg-white p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm text-gray-500">Service</p>
+                      <p className="font-semibold capitalize">{selectedService.service_type.replace(/_/g, ' ')}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Technician</p>
+                      <p className="font-semibold">{selectedService.assigned_technician}</p>
+                    </div>
+                    {selectedService.completion_date && (
+                      <div>
+                        <p className="text-sm text-gray-500">Completed</p>
+                        <p className="font-semibold">{new Date(selectedService.completion_date).toLocaleDateString()}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 {/* Overall Rating */}
                 <div className="p-4 bg-gradient-to-br from-cyan-50 to-blue-50 rounded-lg">
                   <StarRating

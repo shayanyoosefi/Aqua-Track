@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ServiceRequest, Pool, ServiceReport } from "@/entities/all";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, TrendingUp, Clock, DollarSign } from "lucide-react";
+import PageHeader from "../Components/common/PageHeader";
 
 export default function Analytics() {
   const [requests, setRequests] = useState([]);
@@ -47,12 +48,10 @@ export default function Analytics() {
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent mb-2">
-          Analytics & Reports
-        </h1>
-        <p className="text-gray-600">Performance insights and service metrics</p>
-      </div>
+      <PageHeader
+        title="Analytics & Reports"
+        subtitle="Performance insights and service metrics"
+      />
 
       <div className="grid md:grid-cols-4 gap-6 mb-8">
         <Card className="border-none shadow-lg bg-gradient-to-br from-blue-50 to-cyan-50">

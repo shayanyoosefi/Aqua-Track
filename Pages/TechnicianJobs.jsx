@@ -3,6 +3,7 @@ import { ServiceRequest, Pool, User, ServiceReport } from "@/entities/all";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Wrench, MapPin, Clock, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import PageHeader from "../Components/common/PageHeader";
 
 import TechJobCard from "../components/technician/TechJobCard";
 import CompleteJobModal from "../components/technician/CompleteJobModal";
@@ -56,12 +57,10 @@ export default function TechnicianJobs() {
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent mb-2">
-          My Jobs
-        </h1>
-        <p className="text-gray-600">Today's scheduled pool services</p>
-      </div>
+      <PageHeader
+        title="My Jobs"
+        subtitle="Today's scheduled pool services"
+      />
 
       <div className="grid md:grid-cols-3 gap-4 mb-8">
         <Card className="border-none shadow-lg bg-gradient-to-br from-cyan-50 to-blue-50">

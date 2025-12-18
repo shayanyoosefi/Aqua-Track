@@ -9,11 +9,18 @@ import { Input } from "@/components/ui/input";
 import { ClipboardList, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import PageHeader from "../Components/common/PageHeader";
 
 export default function RequestService() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [myPool, setMyPool] = useState(null);
+  const [creatingPool, setCreatingPool] = useState(false);
+  const [newPool, setNewPool] = useState({
+    address: '',
+    pool_type: '',
+    size: ''
+  });
   const [formData, setFormData] = useState({
     service_type: 'cleaning',
     priority: 'medium',
@@ -75,12 +82,76 @@ export default function RequestService() {
   if (!myPool) {
     return (
       <div className="p-4 md:p-8 max-w-2xl mx-auto">
-        <Card className="p-12 text-center border-none shadow-lg">
-          <ClipboardList className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">No Pool Registered</h2>
-          <p className="text-gray-600">
-            Please contact Absolute Pools to register your pool before requesting services.
-          </p>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent mb-2">
+            Register Your Pool
+          </h1>
+          <p className="text-gray-600">Add your pool to submit a service request.</p>
+        </div>
+
+        <Card className="border-none shadow-lg">
+          <CardHeader className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white">
+            <CardTitle>Pool Information</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="space-y-5">
+              <div>
+                <Label>Address *</Label>
+                <Input
+                  className="mt-2"
+                  value={newPool.address}
+                  onChange={(e) => setNewPool({ ...newPool, address: e.target.value })}
+                  placeholder="123 Ocean View Dr"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label>Pool Type</Label>
+                <Input
+                  className="mt-2"
+                  value={newPool.pool_type}
+                  onChange={(e) => setNewPool({ ...newPool, pool_type: e.target.value })}
+                  placeholder="e.g., in-ground, above-ground"
+                />
+              </div>
+
+              <div>
+                <Label>Size</Label>
+                <Input
+                  className="mt-2"
+                  value={newPool.size}
+                  onChange={(e) => setNewPool({ ...newPool, size: e.target.value })}
+                  placeholder="e.g., 8m x 4m"
+                />
+              </div>
+
+              <div className="pt-2">
+                <Button
+                  onClick={async () => {
+                    if (!newPool.address) return;
+                    setCreatingPool(true);
+                    try {
+                      const created = await Pool.create({
+                        ...newPool,
+                        owner_email: user?.email,
+                        status: 'good',
+                        construction_status: 'planning'
+                      });
+                      setMyPool(created);
+                    } catch (e) {
+                      console.error('Create pool failed', e);
+                    }
+                    setCreatingPool(false);
+                  }}
+                  className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
+                  disabled={creatingPool}
+                >
+                  {creatingPool ? 'Saving...' : 'Create Pool & Continue'}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
         </Card>
       </div>
     );
@@ -103,12 +174,10 @@ export default function RequestService() {
 
   return (
     <div className="p-4 md:p-8 max-w-2xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent mb-2">
-          Request Service
-        </h1>
-        <p className="text-gray-600">Submit a service request for your pool</p>
-      </div>
+      <PageHeader
+        title="Request Service"
+        subtitle="Submit a service request for your pool"
+      />
 
       <Card className="border-none shadow-lg">
         <CardHeader className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white">

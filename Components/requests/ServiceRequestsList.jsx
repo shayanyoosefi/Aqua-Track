@@ -1,12 +1,13 @@
 import React from 'react';
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Clock, User, Calendar } from "lucide-react";
+import { MapPin, Clock, User, Calendar, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { ServiceRequest } from "@/entities/ServiceRequest";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-export default function ServiceRequestsList({ requests, pools, loading, onUpdate }) {
+export default function ServiceRequestsList({ requests, pools, technicians = [], loading, onUpdate }) {
   const getPoolInfo = (poolId) => {
     return pools.find(p => p.id === poolId);
   };
@@ -28,6 +29,20 @@ export default function ServiceRequestsList({ requests, pools, loading, onUpdate
 
   const handleStatusUpdate = async (requestId, newStatus) => {
     await ServiceRequest.update(requestId, { status: newStatus });
+    onUpdate();
+  };
+
+  const handleAssignTechnician = async (requestId, techEmail, currentStatus) => {
+    await ServiceRequest.update(requestId, {
+      assigned_technician: techEmail,
+      status: currentStatus === 'pending' ? 'assigned' : currentStatus
+    });
+    onUpdate();
+  };
+
+  const handleDelete = async (requestId) => {
+    if (!confirm('Delete this service request? This action cannot be undone.')) return;
+    await ServiceRequest.delete(requestId);
     onUpdate();
   };
 
@@ -78,12 +93,31 @@ export default function ServiceRequestsList({ requests, pools, loading, onUpdate
                       <span>{pool.address}</span>
                     </div>
                   )}
-                  {request.assigned_technician && (
-                    <div className="flex items-center gap-2">
-                      <User className="w-4 h-4 text-blue-500" />
-                      <span>{request.assigned_technician}</span>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-blue-500" />
+                    { (request.status === 'pending' || request.status === 'assigned') ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-500">Technician:</span>
+                        <Select
+                          value={request.assigned_technician || ''}
+                          onValueChange={(value) => handleAssignTechnician(request.id, value, request.status)}
+                        >
+                          <SelectTrigger className="h-8 w-48">
+                            <SelectValue placeholder="Select technician" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {technicians.map((t) => (
+                              <SelectItem key={t.email} value={t.email}>
+                                {t.full_name} ({t.email})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ) : (
+                      <span>{request.assigned_technician || '—'}</span>
+                    )}
+                  </div>
                   {request.scheduled_date && (
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-purple-500" />
@@ -101,14 +135,14 @@ export default function ServiceRequestsList({ requests, pools, loading, onUpdate
                 )}
               </div>
 
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 items-end">
                 {request.status === 'pending' && (
                   <Button
                     size="sm"
                     onClick={() => handleStatusUpdate(request.id, 'assigned')}
                     className="bg-blue-600 hover:bg-blue-700"
                   >
-                    Assign
+                    Mark Assigned
                   </Button>
                 )}
                 {request.status === 'assigned' && (
@@ -129,6 +163,14 @@ export default function ServiceRequestsList({ requests, pools, loading, onUpdate
                     Complete
                   </Button>
                 )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleDelete(request.id)}
+                  className="border-red-200 text-red-600 hover:bg-red-50"
+                >
+                  <Trash2 className="w-4 h-4 mr-1" /> Delete
+                </Button>
               </div>
             </div>
           </Card>

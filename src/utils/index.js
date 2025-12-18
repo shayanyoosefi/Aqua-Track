@@ -4,6 +4,7 @@ export function createPageUrl(pageName) {
     'ServiceRequests': '/service-requests',
     'Pools': '/pools',
     'ConstructionStatus': '/construction-status',
+    'RequestConstruction': '/request-construction',
     'TechnicianJobs': '/technician-jobs',
     'Technicians': '/technicians',
     'FeedbackReview': '/feedback-review',

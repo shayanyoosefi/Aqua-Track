@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Package, Factory, CheckCircle, Truck, Home, MapPin } from "lucide-react";
 
 export default function ConstructionStatus() {
@@ -30,11 +32,30 @@ export default function ConstructionStatus() {
   };
 
   const handleStatusUpdate = async (poolId, newStatus) => {
-    await Pool.update(poolId, { construction_status: newStatus });
-    loadData();
+    // Optimistic UI: update only this pool locally
+    setPools(prev => prev.map(p => p.id === poolId ? { ...p, construction_status: newStatus } : p));
+    try {
+      await Pool.update(poolId, { construction_status: newStatus });
+    } catch (e) {
+      // On failure, revert by reloading
+      console.error('Update failed, reverting...', e);
+      loadData();
+    }
+  };
+
+  const handlePriceUpdate = async (poolId, newPriceRaw) => {
+    const newPrice = newPriceRaw === "" ? null : Number(newPriceRaw);
+    setPools(prev => prev.map(p => p.id === poolId ? { ...p, estimated_price: newPrice } : p));
+    try {
+      await Pool.update(poolId, { estimated_price: newPrice });
+    } catch (e) {
+      console.error('Price update failed, reverting...', e);
+      loadData();
+    }
   };
 
   const statusConfig = {
+    not_started: { label: 'Planning', color: 'bg-gray-100 text-gray-800', icon: Package },
     planning: { label: 'Planning', color: 'bg-gray-100 text-gray-800', icon: Package },
     in_factory: { label: 'In Factory', color: 'bg-blue-100 text-blue-800', icon: Factory },
     manufacturing: { label: 'Manufacturing', color: 'bg-indigo-100 text-indigo-800', icon: Factory },
@@ -123,8 +144,9 @@ export default function ConstructionStatus() {
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredPools.map((pool) => {
-            const status = pool.construction_status || 'operational';
-            const config = statusConfig[status];
+            const status = pool.construction_status || 'planning';
+            const safeKey = statusConfig[status] ? status : 'planning';
+            const config = statusConfig[safeKey];
             const Icon = config.icon;
 
             return (
@@ -174,9 +196,48 @@ export default function ConstructionStatus() {
                       </div>
                     )}
 
-                    <div className="pt-3 border-t border-gray-100 text-xs text-gray-500">
-                      <p><span className="font-medium">Type:</span> {pool.pool_type}</p>
+                    <div className="pt-3 border-t border-gray-100 text-xs text-gray-500 space-y-1">
+                      <p><span className="font-medium">Type:</span> {pool.pool_type || '-'}</p>
                       {pool.size && <p><span className="font-medium">Size:</span> {pool.size}</p>}
+                      {pool.depth && <p><span className="font-medium">Depth:</span> {pool.depth}</p>}
+                      {pool.shape && <p><span className="font-medium">Shape:</span> {pool.shape}</p>}
+                      {pool.color && <p><span className="font-medium">Color:</span> {pool.color}</p>}
+                      {pool.sanitization_tech && <p><span className="font-medium">Sanitization:</span> {pool.sanitization_tech}</p>}
+                      {pool.notes && <p className="line-clamp-2"><span className="font-medium">Notes:</span> {pool.notes}</p>}
+                    </div>
+
+                    <div className="pt-3 border-t border-gray-100">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">Estimated Price: </span>
+                          {pool.estimated_price != null ? `$${pool.estimated_price.toLocaleString()}` : 'Not set'}
+                        </p>
+                      </div>
+                      {isAdmin && (
+                        <div className="mt-2">
+                          <Label className="text-xs text-gray-500">Set/Update Estimate</Label>
+                          <div className="flex gap-2 mt-1">
+                            <Input
+                              type="number"
+                              placeholder="e.g., 25000"
+                              defaultValue={pool.estimated_price ?? ""}
+                              onBlur={(e) => handlePriceUpdate(pool.id, e.target.value)}
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={(e) => {
+                                const input = (e.currentTarget.previousSibling);
+                                if (input && input.value !== undefined) {
+                                  handlePriceUpdate(pool.id, input.value);
+                                }
+                              }}
+                            >
+                              Save
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>

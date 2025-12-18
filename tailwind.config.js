@@ -6,6 +6,7 @@ export default {
     "./Pages/**/*.{js,jsx}",
     "./Components/**/*.{js,jsx}",
     "./Layout.js",
+    "./Layout.jsx",
   ],
   theme: {
     extend: {

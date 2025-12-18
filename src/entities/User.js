@@ -1,40 +1,56 @@
+import { USER_ROLES } from './roles';
+import { db } from './db';
+
 class User {
   static async me() {
-    // Mock implementation - returns a default admin user
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const users = await db.users.toArray();
     const userId = localStorage.getItem('currentUserId') || '1';
     let user = users.find(u => u.id === userId);
-    
     if (!user) {
+      // Fallback to admin if DB was cleared
       user = {
         id: '1',
         email: 'admin@absolutepools.com',
         full_name: 'Admin User',
-        role: 'admin'
+        role: USER_ROLES.ADMIN
       };
       users.push(user);
-      localStorage.setItem('users', JSON.stringify(users));
+      await db.users.put(user);
+      localStorage.setItem('currentUserId', user.id);
     }
-    
     return user;
   }
 
   static async list() {
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    if (users.length === 0) {
-      return [
-        { id: '1', email: 'admin@absolutepools.com', full_name: 'Admin User', role: 'admin' },
-        { id: '2', email: 'tech1@absolutepools.com', full_name: 'John Technician', role: 'technician', status: 'available', technician_zone: 'North' },
-        { id: '3', email: 'tech2@absolutepools.com', full_name: 'Jane Technician', role: 'technician', status: 'available', technician_zone: 'South' },
-        { id: '4', email: 'client@example.com', full_name: 'Client User', role: 'client' }
-      ];
-    }
-    return users;
+    return await db.users.toArray();
+  }
+
+  static async create(data) {
+    const newUser = {
+      id: Date.now().toString(),
+      status: data.role === USER_ROLES.TECHNICIAN ? (data.status || 'available') : undefined,
+      ...data,
+    };
+    await db.users.put(newUser);
+    return newUser;
+  }
+
+  static async update(id, data) {
+    const existing = await db.users.get(id);
+    if (!existing) throw new Error('User not found');
+    const updated = { ...existing, ...data };
+    await db.users.put(updated);
+    return updated;
+  }
+
+  static async loginAs(id) {
+    localStorage.setItem('currentUserId', id);
+    return await this.me();
   }
 
   static async logout() {
     localStorage.removeItem('currentUserId');
-    window.location.href = '/';
+    window.location.href = '/login';
   }
 }
 

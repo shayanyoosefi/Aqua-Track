@@ -1,6 +1,33 @@
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
 import { Waves, ClipboardList, Users, AlertTriangle, Activity } from "lucide-react";
+
+const accentStyles = {
+  cyan: {
+    icon: "bg-cyan-100 text-cyan-600",
+    chip: "border-cyan-100 text-cyan-600",
+    glow: "from-cyan-300/40 via-blue-300/20 to-transparent"
+  },
+  emerald: {
+    icon: "bg-emerald-100 text-emerald-600",
+    chip: "border-emerald-100 text-emerald-600",
+    glow: "from-emerald-300/35 via-green-300/20 to-transparent"
+  },
+  amber: {
+    icon: "bg-amber-100 text-amber-600",
+    chip: "border-amber-100 text-amber-600",
+    glow: "from-amber-300/40 via-orange-300/25 to-transparent"
+  },
+  violet: {
+    icon: "bg-violet-100 text-violet-600",
+    chip: "border-violet-100 text-violet-600",
+    glow: "from-violet-300/35 via-fuchsia-300/25 to-transparent"
+  },
+  rose: {
+    icon: "bg-rose-100 text-rose-600",
+    chip: "border-rose-100 text-rose-600",
+    glow: "from-rose-300/35 via-red-300/25 to-transparent"
+  }
+};
 
 export default function StatsOverview({ stats }) {
   const statCards = [
@@ -8,59 +35,67 @@ export default function StatsOverview({ stats }) {
       title: "Total Pools",
       value: stats.totalPools,
       icon: Waves,
-      color: "from-cyan-500 to-blue-500",
-      bgColor: "from-cyan-50 to-blue-50"
+      accent: "cyan",
+      hint: "Registered in your organisation"
     },
     {
       title: "Active Services",
       value: stats.activeServices,
       icon: Activity,
-      color: "from-green-500 to-emerald-500",
-      bgColor: "from-green-50 to-emerald-50"
+      accent: "emerald",
+      hint: "Currently scheduled or in progress"
     },
     {
       title: "Pending Requests",
       value: stats.pendingRequests,
       icon: ClipboardList,
-      color: "from-yellow-500 to-orange-500",
-      bgColor: "from-yellow-50 to-orange-50"
+      accent: "amber",
+      hint: "Awaiting review or assignment"
     },
     {
       title: "Available Technicians",
       value: stats.availableTechs,
       icon: Users,
-      color: "from-purple-500 to-pink-500",
-      bgColor: "from-purple-50 to-pink-50"
+      accent: "violet",
+      hint: "Ready to be assigned"
     },
     {
       title: "Pools Needing Attention",
       value: stats.poolsNeedingAttention,
       icon: AlertTriangle,
-      color: "from-red-500 to-rose-500",
-      bgColor: "from-red-50 to-rose-50"
+      accent: "rose",
+      hint: "Marked as critical or needs attention"
     }
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-      {statCards.map((stat, index) => (
-        <Card 
-          key={index}
-          className={`border-none shadow-lg overflow-hidden bg-gradient-to-br ${stat.bgColor}`}
-        >
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} shadow-lg`}>
-                <stat.icon className="w-6 h-6 text-white" />
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      {statCards.map((stat) => {
+        const styles = accentStyles[stat.accent];
+        return (
+          <div
+            key={stat.title}
+            className="group relative overflow-hidden rounded-3xl border border-slate-100 bg-white/90 p-5 shadow-sm backdrop-blur transition-transform hover:-translate-y-1 hover:shadow-md"
+          >
+            <div className={`absolute -top-14 right-0 h-28 w-28 rounded-full bg-gradient-to-br ${styles.glow} blur-2xl transition-opacity group-hover:opacity-100`} />
+            <div className="relative space-y-4">
+              <div className="flex items-center justify-between">
+                <span className={`inline-flex h-12 w-12 items-center justify-center rounded-2xl ${styles.icon} text-lg font-semibold`}>
+                  <stat.icon className="h-5 w-5" />
+                </span>
+                <span className={`rounded-full border bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${styles.chip}`}>
+                  {stat.title.split(' ')[0]}
+                </span>
               </div>
+              <div>
+                <p className="text-3xl font-semibold text-slate-900">{stat.value}</p>
+                <p className="mt-1 text-sm font-medium text-slate-500">{stat.title}</p>
+              </div>
+              <p className="text-xs text-slate-400">{stat.hint}</p>
             </div>
-            <div className="text-3xl font-bold text-gray-900 mb-1">
-              {stat.value}
-            </div>
-            <p className="text-sm text-gray-600 font-medium">{stat.title}</p>
-          </CardContent>
-        </Card>
-      ))}
+          </div>
+        );
+      })}
     </div>
   );
 }
